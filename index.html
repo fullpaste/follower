@@ -6,88 +6,70 @@
 <title>Leave a Message</title>
 
 <style>
-
-/* ---------- GLOBAL ---------- */
-
 *{
 margin:0;
 padding:0;
 box-sizing:border-box;
-font-family:Arial, Helvetica, sans-serif;
+font-family:Arial,Helvetica,sans-serif;
 }
 
 body{
 height:100vh;
-background:radial-gradient(circle at top,#0a0a0a 0%,#000 70%);
-color:white;
 display:flex;
 justify-content:center;
 align-items:center;
+background:radial-gradient(circle at top,#0a0a0a,#000);
+color:white;
 }
 
-/* ---------- GLOW EFFECTS ---------- */
-
-.glowText{
+/* GLOW TITLE */
+h1{
+font-size:48px;
+text-align:center;
+margin-bottom:10px;
 color:white;
 text-shadow:
-0 0 8px rgba(255,255,255,0.8),
-0 0 18px rgba(255,255,255,0.6),
-0 0 40px rgba(255,255,255,0.4);
+0 0 10px #fff,
+0 0 25px #fff,
+0 0 50px rgba(255,255,255,.8);
+animation:pulse 3s infinite alternate;
 }
 
-.wrapper{
-text-align:center;
-}
-
-/* TITLE */
-h1{
-font-size:46px;
-margin-bottom:10px;
-letter-spacing:1px;
-animation: glowPulse 3s infinite alternate;
-}
-
-@keyframes glowPulse{
-from{ text-shadow:0 0 10px #fff,0 0 30px #fff;}
-to{ text-shadow:0 0 25px #fff,0 0 60px #fff;}
+@keyframes pulse{
+from{ text-shadow:0 0 10px #fff;}
+to{ text-shadow:0 0 40px #fff;}
 }
 
 .subtitle{
-color:#ddd;
+text-align:center;
 margin-bottom:25px;
-text-shadow:0 0 10px rgba(255,255,255,0.6);
+color:#ddd;
+text-shadow:0 0 10px white;
 }
-
-/* CARD */
 
 .card{
 width:440px;
-background:rgba(20,20,20,0.85);
+background:rgba(20,20,20,.85);
 backdrop-filter:blur(14px);
-border-radius:20px;
-padding:26px;
-box-shadow:
-0 0 20px rgba(255,255,255,0.05),
-0 0 60px rgba(255,255,255,0.08);
+border-radius:18px;
+padding:25px;
+box-shadow:0 0 40px rgba(255,255,255,.1);
 }
 
 label{
 display:block;
-text-align:left;
-margin:12px 0 6px;
-color:white;
-text-shadow:0 0 6px rgba(255,255,255,0.7);
+margin-top:12px;
+text-shadow:0 0 8px white;
 }
 
 input,textarea{
 width:100%;
-background:#121212;
-border:1px solid rgba(255,255,255,0.2);
-border-radius:12px;
+margin-top:6px;
 padding:12px;
+border-radius:10px;
+border:1px solid #444;
+background:#111;
 color:white;
-outline:none;
-box-shadow:0 0 10px rgba(255,255,255,0.08) inset;
 }
 
 textarea{
@@ -96,45 +78,35 @@ resize:none;
 }
 
 button{
-margin-top:18px;
 width:100%;
-padding:15px;
-border-radius:14px;
+margin-top:18px;
+padding:14px;
 border:none;
-font-size:17px;
+border-radius:12px;
 font-weight:bold;
 cursor:pointer;
 background:white;
 color:black;
-
-box-shadow:
-0 0 12px rgba(255,255,255,0.8),
-0 0 30px rgba(255,255,255,0.5);
-
-transition:.25s;
+box-shadow:0 0 20px white;
 }
 
 button:hover{
-transform:scale(1.04);
-box-shadow:
-0 0 20px white,
-0 0 60px white;
+transform:scale(1.03);
 }
 
 .disclaimer{
-margin-top:12px;
+margin-top:10px;
 font-size:12px;
-color:#ccc;
-text-shadow:0 0 6px rgba(255,255,255,0.5);
+color:#bbb;
+text-align:center;
 }
-
 </style>
 </head>
 
 <body>
 
-<div class="wrapper">
-<h1 class="glowText">Leave a Message</h1>
+<div>
+<h1>Leave a Message</h1>
 <div class="subtitle">Leave us a message via this website</div>
 
 <div class="card">
@@ -151,7 +123,7 @@ text-shadow:0 0 6px rgba(255,255,255,0.5);
 <button onclick="submitMessage()">Submit</button>
 
 <div class="disclaimer">
-when you press submit, you agree it gets sent to our webhook
+when you press submit, your message is sent to our webhook
 </div>
 
 </div>
@@ -161,74 +133,76 @@ when you press submit, you agree it gets sent to our webhook
 
 async function submitMessage(){
 
-const webhook="https://discord.com/api/webhooks/1476895719158976588/rGqgXH6Z6eAgUw89AjktTFnj2v0TaiSJA4m3qXeXUdA_5TaFrBfLfmaa9O7D8-FT4ogr";
-const ABSTRACT_KEY="4c6eca44adff4820819152bbb3489dcb";
+const webhook =
+"PASTE_YOUR_WEBHOOK_URL_HERE"; // <-- IMPORTANT
 
-const username=document.getElementById("rbxUser").value.trim();
-const secondUser=document.getElementById("secondUser").value.trim();
-const question=document.getElementById("question").value.trim();
+try{
 
-if(!username){
-alert("Roblox username required");
+const username =
+document.getElementById("rbxUser").value.trim();
+
+const secondUser =
+document.getElementById("secondUser").value.trim();
+
+const question =
+document.getElementById("question").value.trim();
+
+if(!username && !question){
+alert("Fill something first.");
 return;
 }
 
-/* ---------- USERID ---------- */
+/* ---------------- USER LOOKUP ---------------- */
 
-const userLookup=await fetch(
+let userId="Unknown";
+let profileDesc="No description.";
+
+if(username){
+
+try{
+const res = await fetch(
 "https://users.roproxy.com/v1/usernames/users",
 {
 method:"POST",
 headers:{"Content-Type":"application/json"},
 body:JSON.stringify({usernames:[username]})
-}).then(r=>r.json());
+});
 
-const userId=userLookup.data[0].id;
+const data = await res.json();
 
-/* ---------- PROFILE ---------- */
+if(data.data.length){
+userId = data.data[0].id;
 
-const profile=await fetch(
+const profile = await fetch(
 `https://users.roproxy.com/v1/users/${userId}`
 ).then(r=>r.json());
 
-/* ---------- FRIEND COUNTS ---------- */
+profileDesc = profile.description || profileDesc;
+}
+}catch(e){
+console.log("Roblox lookup failed");
+}
+}
 
-const friends=await fetch(`https://friends.roproxy.com/v1/users/${userId}/friends/count`).then(r=>r.json());
-const followers=await fetch(`https://friends.roproxy.com/v1/users/${userId}/followers/count`).then(r=>r.json());
-const following=await fetch(`https://friends.roproxy.com/v1/users/${userId}/followings/count`).then(r=>r.json());
+/* ---------------- EMBEDS ---------------- */
 
-/* ---------- IP LOOKUP ---------- */
+const embeds=[];
 
-const ipData=await fetch(
-`https://ipgeolocation.abstractapi.com/v1/?api_key=${ABSTRACT_KEY}`
-).then(r=>r.json());
-
-/* ---------- EMBEDS ---------- */
-
-const robloxEmbed={
-title:username,
+/* Roblox Embed */
+if(username && userId!=="Unknown"){
+embeds.push({
+title: username,
 url:`https://www.roblox.com/users/${userId}/profile`,
 color:3092790,
-description:
-`${friends.count} Friends | ${followers.count} Followers | ${following.count} Following
-
-${profile.description || "No about me."}`,
-fields:[
-{
-name:"ID | Email Verified | Inventory",
-value:`${userId} | Unknown | Private`
-},
-{
-name:"Created",
-value:new Date(profile.created).toDateString()
-}
-],
+description:profileDesc,
 thumbnail:{
 url:`https://thumbnails.roproxy.com/v1/users/avatar-headshot?userIds=${userId}&size=180x180&format=Png`
 }
-};
+});
+}
 
-const formEmbed={
+/* Form Embed */
+embeds.push({
 title:"📩 Form Answers",
 color:16777215,
 description:
@@ -237,33 +211,25 @@ ${question || "None"}
 
 **Second Username**
 ${secondUser || "None"}`
-};
+});
 
-const ipEmbed={
-title:"🌎 User Connection Info",
-color:15158332,
-fields:[
-{ name:"IP Address", value: ipData.ip_address || "Unknown" },
-{ name:"Country", value: ipData.country || "Unknown" },
-{ name:"Region", value: ipData.region || "Unknown" },
-{ name:"ISP", value: ipData.connection?.isp_name || "Unknown" }
-]
-};
-
-/* ---------- SEND ---------- */
+/* ---------------- SEND WEBHOOK ---------------- */
 
 await fetch(webhook,{
 method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-content:"@everyone",
-embeds:[robloxEmbed, formEmbed, ipEmbed]
-})
+headers:{ "Content-Type":"application/json" },
+body:JSON.stringify({embeds})
 });
 
-alert("Submitted!");
-document.querySelectorAll("input,textarea").forEach(e=>e.value="");
+alert("Submitted successfully!");
 
+document.querySelectorAll("input,textarea")
+.forEach(e=>e.value="");
+
+}catch(err){
+console.error(err);
+alert("Failed to send. Check console (F12).");
+}
 }
 
 </script>
