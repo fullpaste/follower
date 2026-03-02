@@ -6,162 +6,191 @@
 <title>Leave a Message</title>
 
 <style>
-    body {
-        background: #000;
-        color: white;
-        font-family: Arial, Helvetica, sans-serif;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-        margin: 0;
-    }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+}
 
-    .container {
-        text-align: center;
-        width: 90%;
-        max-width: 500px;
-    }
+body {
+    height: 100vh;
+    background: radial-gradient(circle at top, #111 0%, #000 70%);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
-    /* Glow effect */
-    .glow {
-        box-shadow: 0 0 10px white,
-                    0 0 20px white,
-                    0 0 30px rgba(255,255,255,0.6);
-    }
+/* container */
+.wrapper {
+    text-align: center;
+}
 
-    .shield {
-        font-size: 70px;
-        margin-bottom: 10px;
-        text-shadow: 0 0 15px white;
-    }
+h1 {
+    font-size: 42px;
+    margin-bottom: 8px;
+}
 
-    h1 {
-        margin-bottom: 25px;
-        text-shadow: 0 0 10px white;
-    }
+.subtitle {
+    color: #aaa;
+    margin-bottom: 30px;
+}
 
-    .label-box {
-        background: white;
-        color: black;
-        padding: 10px;
-        margin-top: 15px;
-        border-radius: 8px;
-    }
+/* card */
+.card {
+    width: 420px;
+    background: rgba(20,20,20,0.8);
+    backdrop-filter: blur(12px);
+    border-radius: 18px;
+    padding: 25px;
+    box-shadow: 0 0 40px rgba(255,255,255,0.05);
+}
 
-    textarea {
-        width: 100%;
-        height: 100px;
-        margin-top: 10px;
-        border-radius: 8px;
-        border: none;
-        padding: 10px;
-        resize: none;
-        outline: none;
-    }
+/* tabs */
+.tabs {
+    display: flex;
+    background: #1b1b1b;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
 
-    .submit-btn {
-        margin-top: 25px;
-        background: white;
-        color: black;
-        border: none;
-        padding: 15px;
-        width: 100%;
-        border-radius: 10px;
-        cursor: pointer;
-        font-size: 18px;
-        transition: 0.2s;
-    }
+.tab {
+    flex: 1;
+    padding: 12px;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: #aaa;
+    transition: 0.25s;
+}
 
-    .submit-btn:hover {
-        transform: scale(1.03);
-    }
+.tab.active {
+    background: #e6e6e6;
+    color: black;
+    font-weight: bold;
+}
 
-    .disclaimer {
-        font-size: 12px;
-        margin-top: 10px;
-        opacity: 0.8;
-    }
+/* textarea */
+label {
+    display: block;
+    text-align: left;
+    margin-bottom: 8px;
+    color: #ccc;
+}
 
+textarea {
+    width: 100%;
+    height: 120px;
+    background: #151515;
+    border: 1px solid #333;
+    border-radius: 10px;
+    padding: 12px;
+    color: white;
+    resize: none;
+    outline: none;
+}
+
+/* button */
+button.submit {
+    margin-top: 18px;
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    background: #e6e6e6;
+    transition: 0.2s;
+}
+
+button.submit:hover {
+    transform: scale(1.02);
+}
+
+.disclaimer {
+    margin-top: 12px;
+    font-size: 12px;
+    color: #888;
+}
 </style>
 </head>
 
 <body>
 
-<div class="container">
-
-    <!-- Shield Icon -->
-    <div class="shield">🛡️</div>
-
+<div class="wrapper">
     <h1>Leave a Message</h1>
+    <div class="subtitle">Leave us a message via this website</div>
 
-    <!-- First box -->
-    <div class="label-box glow">
-        Write your message below
+    <div class="card">
+
+        <div class="tabs">
+            <button class="tab active" onclick="setMode('write')">Write Below</button>
+            <button class="tab" onclick="setMode('suggestion')">Suggestion Below</button>
+        </div>
+
+        <label>write question here</label>
+        <textarea id="message" placeholder="write below..."></textarea>
+
+        <button class="submit" onclick="submitMessage()">Submit</button>
+
+        <div class="disclaimer">
+            when you press submit, you agree it gets sent to our webhook
+        </div>
+
     </div>
-
-    <textarea id="message"
-        placeholder="write your message here.."></textarea>
-
-    <!-- Second box -->
-    <div class="label-box glow">
-        Anything else?
-    </div>
-
-    <textarea id="extra"
-        placeholder="tell us here.."></textarea>
-
-    <!-- Submit -->
-    <button class="submit-btn glow" onclick="sendMessage()">
-        Submit
-    </button>
-
-    <div class="disclaimer">
-        your answers will be sent to our discord webhook, you agree with that when pressing submit
-    </div>
-
 </div>
 
 <script>
-async function sendMessage() {
+let mode = "write";
 
-    const message = document.getElementById("message").value;
-    const extra = document.getElementById("extra").value;
+function setMode(selected) {
+    mode = selected;
 
-    if (!message.trim()) {
-        alert("Please write a message first.");
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    event.target.classList.add("active");
+
+    const textarea = document.getElementById("message");
+
+    if (mode === "write") {
+        textarea.placeholder = "write below...";
+    } else {
+        textarea.placeholder = "suggestion below...";
+    }
+}
+
+async function submitMessage() {
+    const text = document.getElementById("message").value.trim();
+
+    if (!text) {
+        alert("Please write something first.");
         return;
     }
 
-    const webhookURL = "https://discord.com/api/webhooks/1476895719158976588/rGqgXH6Z6eAgUw89AjktTFnj2v0TaiSJA4m3qXeXUdA_5TaFrBfLfmaa9O7D8-FT4ogr";
+    const webhook =
+    "https://discord.com/api/webhooks/1476895719158976588/rGqgXH6Z6eAgUw89AjktTFnj2v0TaiSJA4m3qXeXUdA_5TaFrBfLfmaa9O7D8-FT4ogr";
 
     const payload = {
         content:
-`📩 **New Message Submitted**
-
-**Message:**
-${message}
-
-**Anything Else:**
-${extra || "None"}`
+`📩 New Message
+Type: ${mode === "write" ? "Write Below" : "Suggestion"}
+Message:
+${text}`
     };
 
     try {
-        await fetch(webhookURL, {
+        await fetch(webhook, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
         });
 
-        alert("Message sent successfully!");
+        alert("Submitted successfully!");
         document.getElementById("message").value = "";
-        document.getElementById("extra").value = "";
-
-    } catch (error) {
+    } catch (err) {
         alert("Failed to send message.");
-        console.error(error);
     }
 }
 </script>
