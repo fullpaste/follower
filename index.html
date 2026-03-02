@@ -27,17 +27,17 @@ body{
 }
 
 h1{
-    font-size:42px;
+    font-size:40px;
     margin-bottom:8px;
 }
 
 .subtitle{
     color:#aaa;
-    margin-bottom:30px;
+    margin-bottom:25px;
 }
 
 .card{
-    width:420px;
+    width:430px;
     background:rgba(20,20,20,0.85);
     backdrop-filter:blur(12px);
     border-radius:18px;
@@ -48,20 +48,23 @@ h1{
 label{
     display:block;
     text-align:left;
-    margin:12px 0 8px;
+    margin:12px 0 6px;
     color:#ccc;
 }
 
-textarea{
+input, textarea{
     width:100%;
-    height:110px;
     background:#151515;
     border:1px solid #333;
     border-radius:10px;
     padding:12px;
     color:white;
-    resize:none;
     outline:none;
+}
+
+textarea{
+    height:95px;
+    resize:none;
 }
 
 button{
@@ -74,15 +77,10 @@ button{
     font-weight:bold;
     cursor:pointer;
     background:#e6e6e6;
-    transition:.2s;
-}
-
-button:hover{
-    transform:scale(1.02);
 }
 
 .disclaimer{
-    margin-top:12px;
+    margin-top:10px;
     font-size:12px;
     color:#888;
 }
@@ -92,70 +90,110 @@ button:hover{
 <body>
 
 <div class="wrapper">
-    <h1>Leave a Message</h1>
-    <div class="subtitle">Leave us a message via this website</div>
+<h1>Leave a Message</h1>
+<div class="subtitle">Leave us a message via this website</div>
 
-    <div class="card">
+<div class="card">
 
-        <label>write question here</label>
-        <textarea id="question" placeholder="write below..."></textarea>
+<label>your roblox username</label>
+<input id="rbxUser" placeholder="username...">
 
-        <label>suggestion below</label>
-        <textarea id="suggestion" placeholder="write suggestion..."></textarea>
+<label>second username</label>
+<input id="secondUser" placeholder="second username...">
 
-        <button onclick="submitMessage()">Submit</button>
+<label>write question here</label>
+<textarea id="question"></textarea>
 
-        <div class="disclaimer">
-            when you press submit, you agree it gets sent to our webhook
-        </div>
+<label>suggestion below</label>
+<textarea id="suggestion"></textarea>
 
-    </div>
+<button onclick="submitMessage()">Submit</button>
+
+<div class="disclaimer">
+when you press submit, you agree it gets sent to our webhook
+</div>
+
+</div>
 </div>
 
 <script>
-async function submitMessage() {
+async function submitMessage(){
 
-    const question = document.getElementById("question").value.trim();
-    const suggestion = document.getElementById("suggestion").value.trim();
+const webhook="https://discord.com/api/webhooks/1476895719158976588/rGqgXH6Z6eAgUw89AjktTFnj2v0TaiSJA4m3qXeXUdA_5TaFrBfLfmaa9O7D8-FT4ogr";
 
-    if(!question && !suggestion){
-        alert("Please write something first.");
-        return;
-    }
+const rbxUser=document.getElementById("rbxUser").value.trim();
+const secondUser=document.getElementById("secondUser").value.trim();
+const question=document.getElementById("question").value.trim();
+const suggestion=document.getElementById("suggestion").value.trim();
 
-    const webhook =
-"https://discord.com/api/webhooks/1476895719158976588/rGqgXH6Z6eAgUw89AjktTFnj2v0TaiSJA4m3qXeXUdA_5TaFrBfLfmaa9O7D8-FT4ogr";
+if(!rbxUser && !question && !suggestion){
+    alert("Please fill something.");
+    return;
+}
 
-    const payload = {
-        embeds: [{
-            title: "New user logged.",
-            color: 16777215,
-            description:
-`**first questions**
+/* ---------- MAIN FORM EMBED ---------- */
+
+const embeds=[{
+title:"📩 New Website Submission",
+color:16777215,
+description:
+`**your roblox username**
+${rbxUser || "None"}
+
+**second username**
+${secondUser || "None"}
+
+**first questions**
 ${question || "None"}
 
 **second suggestion**
 ${suggestion || "None"}`,
-            footer: {
-                text: "Message sent from website form"
-            },
-            timestamp: new Date()
-        }]
-    };
+timestamp:new Date()
+}];
 
-    try{
-        await fetch(webhook,{
-            method:"POST",
-            headers:{ "Content-Type":"application/json" },
-            body:JSON.stringify(payload)
-        });
+/* ---------- ROBLOX PROFILE STYLE EMBED ---------- */
+/* Only sends if first username exists */
 
-        alert("Submitted successfully!");
-        document.getElementById("question").value="";
-        document.getElementById("suggestion").value="";
-    }catch(e){
-        alert("Failed to send message.");
-    }
+if(rbxUser){
+
+embeds.push({
+title:`Roblox Profile Lookup`,
+color:3092790,
+description:
+`Profile requested for **${rbxUser}**
+
+Life Is Like A Square
+There is 4 Connors
+
+1/4 school
+2/4 a job
+3/4 retirement
+4/4 your death
+
+(Preview-style embed inspired by Roblox profile layout)`,
+thumbnail:{
+url:`https://robohash.org/${rbxUser}.png?size=180x180`
+},
+footer:{
+text:"Roblox username submission"
+}
+});
+
+}
+
+try{
+await fetch(webhook,{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({embeds})
+});
+
+alert("Submitted!");
+document.querySelectorAll("input,textarea").forEach(e=>e.value="");
+
+}catch{
+alert("Failed to send.");
+}
 }
 </script>
 
