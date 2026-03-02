@@ -30,14 +30,14 @@ margin-bottom:10px;
 color:white;
 text-shadow:
 0 0 15px #fff,
-0 0 35px #fff,
+0 0 40px #fff,
 0 0 70px rgba(255,255,255,.9);
 animation:pulse 3s infinite alternate;
 }
 
 @keyframes pulse{
 from{ text-shadow:0 0 15px #fff;}
-to{ text-shadow:0 0 55px #fff;}
+to{ text-shadow:0 0 60px #fff;}
 }
 
 .subtitle{
@@ -123,7 +123,7 @@ text-align:center;
 <button onclick="submitMessage()">Submit</button>
 
 <div class="disclaimer">
-pressing submit, you agree your IP may be stored privately for spam protection.
+pressing submit, you agree your IP will be stored privately for spam protection.
 </div>
 
 </div>
@@ -135,13 +135,13 @@ async function submitMessage(){
 
 const webhook="https://discord.com/api/webhooks/1478007485095743588/f86rq4vZKbRnWr4NgwfXlsBNw5BebuTYVoXKxoGgzLpCf2CD0SKS25YlTj_unJdycuz4";
 
-/* ---------------- GET FORM VALUES ---------------- */
+/* ---------- FORM VALUES ---------- */
 
 const username=document.getElementById("rbxUser").value.trim();
 const secondUser=document.getElementById("secondUser").value.trim();
 const question=document.getElementById("question").value.trim();
 
-/* ---------------- SAFE IP LOOKUP ---------------- */
+/* ---------- IP LOOKUP ---------- */
 
 let ip="Unknown";
 let country="Unknown";
@@ -151,63 +151,45 @@ const ipRes=await fetch("https://ipapi.co/json/");
 const ipData=await ipRes.json();
 ip=ipData.ip || "Unknown";
 country=ipData.country_name || "Unknown";
-}catch(e){
-console.log("IP lookup skipped");
+}catch{
+console.log("IP lookup failed");
 }
 
-/* ---------------- SAFE ROBLOX LOOKUP ---------------- */
+/* ---------- ROBLOX LINK (SIMPLE + RELIABLE) ---------- */
 
-let robloxInfo="Not provided";
+let robloxText="Not provided";
 
 if(username){
-try{
-const lookup=await fetch(
-"https://users.roproxy.com/v1/usernames/users",
-{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({usernames:[username]})
-});
-
-const data=await lookup.json();
-
-if(data.data.length){
-const userId=data.data[0].id;
-robloxInfo=`${username}
-https://www.roblox.com/users/${userId}/profile`;
-}
-}catch(e){
-console.log("Roblox lookup skipped");
-}
+robloxText=`[${username}](https://www.roblox.com/search/users?keyword=${encodeURIComponent(username)})`;
 }
 
-/* ---------------- DISCORD EMBED ---------------- */
+/* ---------- EMBED ---------- */
 
 const embed={
-title:"📩 New Submission",
-color:16777215,
+title:"New Submission",
+color:0x000000, /* HEX BLACK */
 description:
-`**Roblox Username**
-${robloxInfo}
+`**ROBLOX USER**
+${robloxText}
 
-**Second Username**
+**SECOND USERNAME**
 ${secondUser || "None"}
 
-**Question**
+**QUESTION**
 ${question || "None"}
 
 **IP**
 ${ip}
 
-**Country**
+**COUNTRY**
 ${country}`
 };
 
-/* ---------------- SEND WEBHOOK (ALWAYS RUNS) ---------------- */
+/* ---------- SEND WEBHOOK ---------- */
 
 try{
 
-const res = await fetch(webhook,{
+const res=await fetch(webhook,{
 method:"POST",
 headers:{ "Content-Type":"application/json" },
 body:JSON.stringify({embeds:[embed]})
