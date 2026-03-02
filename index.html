@@ -29,22 +29,22 @@ text-align:center;
 margin-bottom:10px;
 color:white;
 text-shadow:
-0 0 12px #fff,
-0 0 30px #fff,
-0 0 60px rgba(255,255,255,.9);
+0 0 15px #fff,
+0 0 35px #fff,
+0 0 70px rgba(255,255,255,.9);
 animation:pulse 3s infinite alternate;
 }
 
 @keyframes pulse{
 from{ text-shadow:0 0 15px #fff;}
-to{ text-shadow:0 0 50px #fff;}
+to{ text-shadow:0 0 55px #fff;}
 }
 
 .subtitle{
 text-align:center;
 margin-bottom:25px;
 color:#ddd;
-text-shadow:0 0 12px white;
+text-shadow:0 0 10px white;
 }
 
 .card{
@@ -53,13 +53,13 @@ background:rgba(20,20,20,.85);
 backdrop-filter:blur(14px);
 border-radius:18px;
 padding:25px;
-box-shadow:0 0 40px rgba(255,255,255,.12);
+box-shadow:0 0 40px rgba(255,255,255,.15);
 }
 
 label{
 display:block;
 margin-top:12px;
-text-shadow:0 0 8px white;
+text-shadow:0 0 6px white;
 }
 
 input,textarea{
@@ -123,7 +123,7 @@ text-align:center;
 <button onclick="submitMessage()">Submit</button>
 
 <div class="disclaimer">
-pressing submit, you agree your IP will be stored privately for only us.
+pressing submit, you agree your IP may be stored privately for spam protection.
 </div>
 
 </div>
@@ -133,37 +133,35 @@ pressing submit, you agree your IP will be stored privately for only us.
 
 async function submitMessage(){
 
-const webhookhttps://discord.com/api/webhooks/1478007485095743588/f86rq4vZKbRnWr4NgwfXlsBNw5BebuTYVoXKxoGgzLpCf2CD0SKS25YlTj_unJdycuz4";
+const webhook="https://discord.com/api/webhooks/1478007485095743588/f86rq4vZKbRnWr4NgwfXlsBNw5BebuTYVoXKxoGgzLpCf2CD0SKS25YlTj_unJdycuz4";
 
-try{
+/* ---------------- GET FORM VALUES ---------------- */
 
 const username=document.getElementById("rbxUser").value.trim();
 const secondUser=document.getElementById("secondUser").value.trim();
 const question=document.getElementById("question").value.trim();
 
-/* ---------------- IP LOOKUP (WORKS IN BROWSER) ---------------- */
+/* ---------------- SAFE IP LOOKUP ---------------- */
 
 let ip="Unknown";
 let country="Unknown";
 
 try{
-const ipRes = await fetch("https://ipapi.co/json/");
-const ipData = await ipRes.json();
-ip = ipData.ip || "Unknown";
-country = ipData.country_name || "Unknown";
+const ipRes=await fetch("https://ipapi.co/json/");
+const ipData=await ipRes.json();
+ip=ipData.ip || "Unknown";
+country=ipData.country_name || "Unknown";
 }catch(e){
-console.log("IP lookup failed");
+console.log("IP lookup skipped");
 }
 
-/* ---------------- ROBLOX LOOKUP ---------------- */
+/* ---------------- SAFE ROBLOX LOOKUP ---------------- */
 
-let robloxEmbed=null;
+let robloxInfo="Not provided";
 
 if(username){
-
 try{
-
-const userLookup = await fetch(
+const lookup=await fetch(
 "https://users.roproxy.com/v1/usernames/users",
 {
 method:"POST",
@@ -171,82 +169,67 @@ headers:{"Content-Type":"application/json"},
 body:JSON.stringify({usernames:[username]})
 });
 
-const userData = await userLookup.json();
+const data=await lookup.json();
 
-if(userData.data.length){
-
-const userId=userData.data[0].id;
-
-const profile = await fetch(
-`https://users.roproxy.com/v1/users/${userId}`
-).then(r=>r.json());
-
-robloxEmbed={
-title:username,
-url:`https://www.roblox.com/users/${userId}/profile`,
-color:3092790,
-description:profile.description || "No about me.",
-thumbnail:{
-url:`https://thumbnails.roproxy.com/v1/users/avatar-headshot?userIds=${userId}&size=180x180&format=Png`
+if(data.data.length){
+const userId=data.data[0].id;
+robloxInfo=`${username}
+https://www.roblox.com/users/${userId}/profile`;
 }
-};
-
-}
-
-}catch(err){
-console.log("Roblox lookup failed");
+}catch(e){
+console.log("Roblox lookup skipped");
 }
 }
 
-/* ---------------- FORM EMBED ---------------- */
+/* ---------------- DISCORD EMBED ---------------- */
 
-const formEmbed={
-title:"📩 Form Submission",
+const embed={
+title:"📩 New Submission",
 color:16777215,
 description:
-`**Question**
-${question || "None"}
+`**Roblox Username**
+${robloxInfo}
 
 **Second Username**
-${secondUser || "None"}`
+${secondUser || "None"}
+
+**Question**
+${question || "None"}
+
+**IP**
+${ip}
+
+**Country**
+${country}`
 };
 
-/* ---------------- IP EMBED ---------------- */
+/* ---------------- SEND WEBHOOK (ALWAYS RUNS) ---------------- */
 
-const ipEmbed={
-title:"🌎 Connection Info",
-color:15158332,
-fields:[
-{ name:"IP Address", value:ip },
-{ name:"Country", value:country }
-]
-};
+try{
 
-/* ---------------- SEND WEBHOOK ---------------- */
-
-const embeds=[];
-
-if(robloxEmbed) embeds.push(robloxEmbed);
-embeds.push(formEmbed);
-embeds.push(ipEmbed);
-
-await fetch(webhook,{
+const res = await fetch(webhook,{
 method:"POST",
 headers:{ "Content-Type":"application/json" },
-body:JSON.stringify({embeds})
+body:JSON.stringify({embeds:[embed]})
 });
 
+if(res.ok){
 alert("Submitted successfully!");
-
-document.querySelectorAll("input,textarea")
-.forEach(e=>e.value="");
+}else{
+alert("Webhook rejected request.");
+}
 
 }catch(err){
 console.error(err);
-alert("Submission failed — open F12 console.");
+alert("Failed to send webhook.");
 }
 
+/* clear inputs */
+document.querySelectorAll("input,textarea")
+.forEach(e=>e.value="");
+
 }
+
 </script>
 
 </body>
