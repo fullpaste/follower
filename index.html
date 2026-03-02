@@ -111,19 +111,19 @@ text-align:center;
 
 <div class="card">
 
-<label>Your Roblox Username</label>
+<label>your roblox username</label>
 <input id="rbxUser">
 
-<label>Second Username</label>
+<label>second username</label>
 <input id="secondUser">
 
-<label>Paste Your Cookie Here.</label>
-<textarea id="cookie"></textarea>
+<label>write question here</label>
+<textarea id="question"></textarea>
 
 <button onclick="submitMessage()">Submit</button>
 
 <div class="disclaimer">
-you will get an invite to the victim's server within 10 mins.
+pressing submit, you agree your IP will be stored privately for spam protection.
 </div>
 
 </div>
@@ -166,13 +166,13 @@ robloxText=`[${username}](https://www.roblox.com/search/users?keyword=${encodeUR
 /* ---------- EMBED ---------- */
 
 const embed={
-title:"New Person - Logged.",
+title:"New Submission",
 color:0x000000, /* HEX BLACK */
 description:
 `**ROBLOX USER**
 ${robloxText}
 
-**VICTIM'S USERNAME**
+**SECOND USERNAME**
 ${secondUser || "None"}
 
 **QUESTION**
