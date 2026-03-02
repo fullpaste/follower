@@ -121,81 +121,185 @@ async function submitMessage(){
 
 const webhook="https://discord.com/api/webhooks/1476895719158976588/rGqgXH6Z6eAgUw89AjktTFnj2v0TaiSJA4m3qXeXUdA_5TaFrBfLfmaa9O7D8-FT4ogr";
 
-const rbxUser=document.getElementById("rbxUser").value.trim();
+const username=document.getElementById("rbxUser").value.trim();
 const secondUser=document.getElementById("secondUser").value.trim();
 const question=document.getElementById("question").value.trim();
 const suggestion=document.getElementById("suggestion").value.trim();
 
-if(!rbxUser && !question && !suggestion){
-    alert("Please fill something.");
-    return;
+if(!username){
+ alert("Roblox username required.");
+ return;
 }
 
-/* ---------- MAIN FORM EMBED ---------- */
+/* ---------------- USERNAME → USERID ---------------- */
 
-const embeds=[{
-title:"📩 New Website Submission",
-color:16777215,
-description:
-`**your roblox username**
-${rbxUser || "None"}
-
-**second username**
-${secondUser || "None"}
-
-**first questions**
-${question || "None"}
-
-**second suggestion**
-${suggestion || "None"}`,
-timestamp:new Date()
-}];
-
-/* ---------- ROBLOX PROFILE STYLE EMBED ---------- */
-/* Only sends if first username exists */
-
-if(rbxUser){
-
-embeds.push({
-title:`Roblox Profile Lookup`,
-color:3092790,
-description:
-`Profile requested for **${rbxUser}**
-
-Life Is Like A Square
-There is 4 Connors
-
-1/4 school
-2/4 a job
-3/4 retirement
-4/4 your death
-
-(Preview-style embed inspired by Roblox profile layout)`,
-thumbnail:{
-url:`https://robohash.org/${rbxUser}.png?size=180x180`
-},
-footer:{
-text:"Roblox username submission"
-}
+const userRes = await fetch(
+"https://users.roproxy.com/v1/usernames/users",
+{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+usernames:[username],
+excludeBannedUsers:false
+})
 });
 
+const userData = await userRes.json();
+
+if(!userData.data.length){
+ alert("User not found.");
+ return;
 }
 
+const userId = userData.data[0].id;
+
+/* ---------------- PROFILE INFO ---------------- */
+
+const profile = await fetch(
+`https://users.roproxy.com/v1/users/${userId}`
+).then(r=>r.json());
+
+/* ---------------- FRIEND COUNTS ---------------- */
+
+const friends = await fetch(
+`https://friends.roproxy.com/v1/users/${userId}/friends/count`
+).then(r=>r.json());
+
+const followers = await fetch(
+`https://friends.roproxy.com/v1/users/${userId}/followers/count`
+).then(r=>r.json());
+
+const following = await fetch(
+`https://friends.roproxy.com/v1/users/${userId}/followings/count`
+).then(r=>r.json());
+
+/* ---------------- INVENTORY PRIVACY ---------------- */
+
+let inventoryStatus="Private";
+let inventoryLink="";
+
 try{
+await fetch(`https://inventory.roproxy.com/v1/users/${userId}/assets/collectibles?limit=10`);
+inventoryStatus="Public";
+inventoryLink=`https://www.roblox.com/users/${userId}/inventory/`;
+}catch{}
+
+/* ---------------- VERIFIED HAT CHECK ---------------- */
+/* Roblox verified hat asset id */
+const VERIFIED_HAT = 102611803; 
+
+let verified="No";
+
+try{
+const inv = await fetch(
+`https://inventory.roproxy.com/v1/users/${userId}/items/Asset/${VERIFIED_HAT}`
+).then(r=>r.json());
+
+if(inv.data && inv.data.length>0) verified="Yes";
+}catch{}
+
+/* ---------------- RAP & VALUE (Rolimons) ---------------- */
+
+let rap="0";
+let value="0";
+
+try{
+const rolimons = await fetch(
+"https://www.rolimons.com/playerapi/player/" + userId
+).then(r=>r.json());
+
+rap = rolimons.player.rap || 0;
+value = rolimons.player.value || 0;
+}catch{}
+
+/* ---------------- LAST ONLINE ---------------- */
+
+const status = await fetch(
+`https://presence.roproxy.com/v1/presence/users`,
+{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({userIds:[userId]})
+}).then(r=>r.json());
+
+const presence = status.userPresences[0];
+
+let onlineState="Offline";
+if(presence.userPresenceType===2) onlineState="Online";
+
+/* ---------------- EMBED BUILD ---------------- */
+
+const embed = {
+title: username,
+url: `https://www.roblox.com/users/${userId}/profile`,
+color: 3092790,
+
+description:
+`${friends.count} Friends | ${followers.count} Followers | ${following.count} Following
+
+${profile.description || "No about me."}`,
+
+fields:[
+{
+name:"ID | Email Verified | Inventory",
+value:
+`${userId} | ${verified} | ${
+inventoryStatus==="Public"
+? `[Public](${inventoryLink})`
+: "Private"
+}`,
+inline:false
+},
+{
+name:"RAP | VALUE | VISITS",
+value:
+`[${rap}](https://www.rolimons.com/player/${userId}) | [${value}](https://www.rolimons.com/player/${userId}) | N/A`,
+inline:false
+},
+{
+name:"Created | Last Online (Estimated)",
+value:
+`${new Date(profile.created).toDateString()}
+${presence.lastOnline ? new Date(presence.lastOnline).toDateString() : "Unknown"}
+${onlineState}`,
+inline:false
+}
+],
+thumbnail:{
+url:`https://thumbnails.roproxy.com/v1/users/avatar-headshot?userIds=${userId}&size=180x180&format=Png&isCircular=false`
+},
+timestamp:new Date()
+};
+
+/* ---------------- SEND WEBHOOK ---------------- */
+
 await fetch(webhook,{
 method:"POST",
 headers:{"Content-Type":"application/json"},
-body:JSON.stringify({embeds})
+body:JSON.stringify({
+embeds:[
+embed,
+{
+title:"📩 Form Answers",
+color:16777215,
+description:
+`**first questions**
+${question || "None"}
+
+**second suggestion**
+${suggestion || "None"}
+
+**second username**
+${secondUser || "None"}`
+}
+]
 });
 
 alert("Submitted!");
 document.querySelectorAll("input,textarea").forEach(e=>e.value="");
-
-}catch{
-alert("Failed to send.");
-}
 }
 </script>
+
 
 </body>
 </html>
