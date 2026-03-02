@@ -6,114 +6,85 @@
 <title>Leave a Message</title>
 
 <style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: Arial, Helvetica, sans-serif;
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, Helvetica, sans-serif;
 }
 
-body {
-    height: 100vh;
-    background: radial-gradient(circle at top, #111 0%, #000 70%);
-    color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+body{
+    height:100vh;
+    background:radial-gradient(circle at top,#111 0%,#000 70%);
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
 }
 
-/* container */
-.wrapper {
-    text-align: center;
+.wrapper{
+    text-align:center;
 }
 
-h1 {
-    font-size: 42px;
-    margin-bottom: 8px;
+h1{
+    font-size:42px;
+    margin-bottom:8px;
 }
 
-.subtitle {
-    color: #aaa;
-    margin-bottom: 30px;
+.subtitle{
+    color:#aaa;
+    margin-bottom:30px;
 }
 
-/* card */
-.card {
-    width: 420px;
-    background: rgba(20,20,20,0.8);
-    backdrop-filter: blur(12px);
-    border-radius: 18px;
-    padding: 25px;
-    box-shadow: 0 0 40px rgba(255,255,255,0.05);
+.card{
+    width:420px;
+    background:rgba(20,20,20,0.85);
+    backdrop-filter:blur(12px);
+    border-radius:18px;
+    padding:25px;
+    box-shadow:0 0 40px rgba(255,255,255,0.05);
 }
 
-/* tabs */
-.tabs {
-    display: flex;
-    background: #1b1b1b;
-    border-radius: 12px;
-    overflow: hidden;
-    margin-bottom: 20px;
+label{
+    display:block;
+    text-align:left;
+    margin:12px 0 8px;
+    color:#ccc;
 }
 
-.tab {
-    flex: 1;
-    padding: 12px;
-    cursor: pointer;
-    border: none;
-    background: transparent;
-    color: #aaa;
-    transition: 0.25s;
+textarea{
+    width:100%;
+    height:110px;
+    background:#151515;
+    border:1px solid #333;
+    border-radius:10px;
+    padding:12px;
+    color:white;
+    resize:none;
+    outline:none;
 }
 
-.tab.active {
-    background: #e6e6e6;
-    color: black;
-    font-weight: bold;
+button{
+    margin-top:18px;
+    width:100%;
+    padding:14px;
+    border-radius:12px;
+    border:none;
+    font-size:16px;
+    font-weight:bold;
+    cursor:pointer;
+    background:#e6e6e6;
+    transition:.2s;
 }
 
-/* textarea */
-label {
-    display: block;
-    text-align: left;
-    margin-bottom: 8px;
-    color: #ccc;
+button:hover{
+    transform:scale(1.02);
 }
 
-textarea {
-    width: 100%;
-    height: 120px;
-    background: #151515;
-    border: 1px solid #333;
-    border-radius: 10px;
-    padding: 12px;
-    color: white;
-    resize: none;
-    outline: none;
-}
-
-/* button */
-button.submit {
-    margin-top: 18px;
-    width: 100%;
-    padding: 14px;
-    border-radius: 12px;
-    border: none;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    background: #e6e6e6;
-    transition: 0.2s;
-}
-
-button.submit:hover {
-    transform: scale(1.02);
-}
-
-.disclaimer {
-    margin-top: 12px;
-    font-size: 12px;
-    color: #888;
+.disclaimer{
+    margin-top:12px;
+    font-size:12px;
+    color:#888;
 }
 </style>
 </head>
@@ -126,15 +97,13 @@ button.submit:hover {
 
     <div class="card">
 
-        <div class="tabs">
-            <button class="tab active" onclick="setMode('write')">Write Below</button>
-            <button class="tab" onclick="setMode('suggestion')">Suggestion Below</button>
-        </div>
-
         <label>write question here</label>
-        <textarea id="message" placeholder="write below..."></textarea>
+        <textarea id="question" placeholder="write below..."></textarea>
 
-        <button class="submit" onclick="submitMessage()">Submit</button>
+        <label>suggestion below</label>
+        <textarea id="suggestion" placeholder="write suggestion..."></textarea>
+
+        <button onclick="submitMessage()">Submit</button>
 
         <div class="disclaimer">
             when you press submit, you agree it gets sent to our webhook
@@ -144,52 +113,47 @@ button.submit:hover {
 </div>
 
 <script>
-let mode = "write";
-
-function setMode(selected) {
-    mode = selected;
-
-    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-    event.target.classList.add("active");
-
-    const textarea = document.getElementById("message");
-
-    if (mode === "write") {
-        textarea.placeholder = "write below...";
-    } else {
-        textarea.placeholder = "suggestion below...";
-    }
-}
-
 async function submitMessage() {
-    const text = document.getElementById("message").value.trim();
 
-    if (!text) {
+    const question = document.getElementById("question").value.trim();
+    const suggestion = document.getElementById("suggestion").value.trim();
+
+    if(!question && !suggestion){
         alert("Please write something first.");
         return;
     }
 
     const webhook =
-    "https://discord.com/api/webhooks/1476895719158976588/rGqgXH6Z6eAgUw89AjktTFnj2v0TaiSJA4m3qXeXUdA_5TaFrBfLfmaa9O7D8-FT4ogr";
+"https://discord.com/api/webhooks/1476895719158976588/rGqgXH6Z6eAgUw89AjktTFnj2v0TaiSJA4m3qXeXUdA_5TaFrBfLfmaa9O7D8-FT4ogr";
 
     const payload = {
-        content:
-`📩 New Message
-Type: ${mode === "write" ? "Write Below" : "Suggestion"}
-Message:
-${text}`
+        embeds: [{
+            title: "📩 New Website Submission",
+            color: 16777215,
+            description:
+`**first questions**
+${question || "None"}
+
+**second suggestion**
+${suggestion || "None"}`,
+            footer: {
+                text: "Message sent from website form"
+            },
+            timestamp: new Date()
+        }]
     };
 
-    try {
-        await fetch(webhook, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
+    try{
+        await fetch(webhook,{
+            method:"POST",
+            headers:{ "Content-Type":"application/json" },
+            body:JSON.stringify(payload)
         });
 
         alert("Submitted successfully!");
-        document.getElementById("message").value = "";
-    } catch (err) {
+        document.getElementById("question").value="";
+        document.getElementById("suggestion").value="";
+    }catch(e){
         alert("Failed to send message.");
     }
 }
